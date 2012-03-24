@@ -2,6 +2,7 @@
 
 class MetricsTracker {
 	public $token;
+	//public $host = 'http://chtkmpclone.heroku.com/';
 	public $host = 'http://localhost:4567/';
 	public function __construct($token_string) {
 		$this->token = $token_string;

@@ -20,15 +20,37 @@ get '/' do
   File.read(File.join('public', 'index.html'))
 end
 
-get '/stats/:event/:property' do
+get '/stats/:token/:event' do
+  #TODO: factor out so this can reuse code from property route
   coll = db.collection MONGO_COLL
   result = []
-  coll.find({"properties.#{params[:property]}" => {'$exists' => true}}).each {|row| result.push row.inspect}
-  if not result.length > 0
+  coll.find({"event" => "#{params[:event]}", "properties.token" => "#{params[:token]}"}).each {|row| result.push row}
+  if not params[:token] == 'chtkmpdemo'
+  #TODO: add formal authentication/registration/all that good stuff
+    result = {}
+    result['status'] = 'failed'
+    result['reason'] = 'unauthorized'
+  elsif not result.length > 0
     result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event #{params[:event]}, property: #{params[:property]}"}
-    result = result.to_json
   end
-  result.inspect
+  content_type :json
+  result.to_json
+end
+
+get '/stats/:token/:event/:property' do
+  coll = db.collection MONGO_COLL
+  result = []
+  coll.find({"event" => "#{params[:event]}", "properties.#{params[:property]}" => {'$exists' => true}, "properties.token" => "#{params[:token]}"}).each {|row| result.push row}
+  if not params[:token] == 'chtkmpdemo'
+  #TODO: add formal authentication/registration/all that good stuff
+    result = {}
+    result['status'] = 'failed'
+    result['reason'] = 'unauthorized'
+  elsif not result.length > 0
+    result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event #{params[:event]}, property: #{params[:property]}"}
+  end
+  content_type :json
+  result.to_json
 end
   
 
