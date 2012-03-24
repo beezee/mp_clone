@@ -82,10 +82,19 @@
 					type: 'datetime'
 				    },
 				    
+				    credits: {
+					enabled: false
+				    },
+				    
+				    tooltip: {
+					xDateFormat: '%m/%d/%Y %I:%M %p'
+				    },
+				    
 				    series: []
-				}
+				};
 		
 		mpcloneApp.updateChart = function() {
+			var self = this;
 			$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
 				var byState = _.groupBy(response, function(row) {
 					return row.properties.state;

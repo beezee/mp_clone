@@ -3,5 +3,5 @@ require_once('mixpanel-api.php');
 
 $tracker = new MetricsTracker('chtkmpdemo');
 
-$tracker->track('click', array('state' => 'New Joisy', 'source' => 'google', 'ip' => '207.28.28.4'));
+$tracker->track('click', array('state' => 'Michigan', 'source' => 'yahoo', 'ip' => '207.28.28.4'));
 
