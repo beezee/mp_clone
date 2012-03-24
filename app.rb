@@ -52,7 +52,6 @@ get '/stats/:token/:event/:property' do
     result['status'] = 'failed'
     result['reason'] = 'unauthorized'
   elsif not result.length > 0
-    #convert params to strings re: http://www.idontplaydarts.com/2010/07/mongodb-is-vulnerable-to-sql-injection-in-php-at-least/
     result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event: #{event}, property: #{event}"}
   end
   content_type :json

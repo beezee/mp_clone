@@ -67,7 +67,8 @@
 	<script src="javascripts/tabs.js"></script>
         <script src="javascripts/underscore-1.2.4.js"></script>
         <script src="javascripts/json2.js"></script>
-	<script src="javascripts/tesseract.min.js"></script>
+	<script type="text/javascript" src="vendor/jqplot/src/plugins/jqplot.canvasTextRenderer.min.js"></script>
+	<script type="text/javascript" src="vendor/jqplot/src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
 	<script type="text/javascript">
 		var mpcloneApp = {};
 		
@@ -75,7 +76,16 @@
 			var byState = _.groupBy(response, function(row) {
 				return row.properties.state;
 			});
-			console.log(byState);
+			var series = [];
+			_.each(byState, function(events, state) {
+				console.log(events, state);
+				var data = _.map(events, function(e, k) {
+					var date = new Date(e.mpclone_time_tracked);
+					return [date.toString(), k+1]
+					});
+				series.push({name:state, data: data});
+			});
+			
 		})
 	</script>
 
