@@ -69,7 +69,9 @@
         <script src="javascripts/backbone.js"></script>
         <script src="javascripts/json2.js"></script>
 	<script type="text/javascript">
-		$.getJSON('http://localhost:4567/stats/chtkmpdemo/click', function(response) {
+		var mpcloneApp = {};
+
+		$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
 			console.log(response);
 		})
 	</script>
