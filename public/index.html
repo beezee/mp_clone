@@ -24,6 +24,7 @@
 	<link rel="stylesheet" href="stylesheets/base.css">
 	<link rel="stylesheet" href="stylesheets/skeleton.css">
 	<link rel="stylesheet" href="stylesheets/layout.css">
+	<link rel="stylesheet" href="vendor/jqplot/jquery.jqplot.min.css">
 
 	<!-- Favicons
 	================================================== -->
@@ -49,12 +50,13 @@
 			<hr />
 		</div>
 		<div class="two columns">
+			&nbsp;
 		</div>
-		<div class="ten columns">
+		<div id="chart" class="ten columns">
 			
 		</div>
 		<div class="two columns">
-			
+			&nbsp;
 		</div>
 
 	</div><!-- container -->
@@ -67,25 +69,42 @@
 	<script src="javascripts/tabs.js"></script>
         <script src="javascripts/underscore-1.2.4.js"></script>
         <script src="javascripts/json2.js"></script>
-	<script type="text/javascript" src="vendor/jqplot/src/plugins/jqplot.canvasTextRenderer.min.js"></script>
-	<script type="text/javascript" src="vendor/jqplot/src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script type="text/javascript">
 		var mpcloneApp = {};
 		
-		$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
-			var byState = _.groupBy(response, function(row) {
-				return row.properties.state;
-			});
-			var series = [];
-			_.each(byState, function(events, state) {
-				console.log(events, state);
-				var data = _.map(events, function(e, k) {
-					var date = new Date(e.mpclone_time_tracked);
-					return [date.toString(), k+1]
+		mpcloneApp.baseChartOptions = {
+			            chart: {
+					renderTo: 'chart',
+					zoomType: 'x'
+				    },
+				    xAxis: {
+					type: 'datetime'
+				    },
+				    
+				    series: []
+				}
+		
+		mpcloneApp.updateChart = function() {
+			$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
+				var byState = _.groupBy(response, function(row) {
+					return row.properties.state;
+				});
+				var series = [];
+				var points = 0;
+				_.each(byState, function(events, state) {
+					series.push({name: state, data:_.map(events, function(e, k) {
+						return [e.mpclone_time_tracked*1000, k+1]
+						})
 					});
-				series.push({name:state, data: data});
-			});
-			
+				});
+				console.log(series);
+				mpcloneApp.baseChartOptions.series = series;
+				this.chart = new Highcharts.Chart(mpcloneApp.baseChartOptions);
+			})	
+		};
+		$('document').ready(function() {
+			mpcloneApp.updateChart();
 		})
 	</script>
 
