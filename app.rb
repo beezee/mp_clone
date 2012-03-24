@@ -27,8 +27,7 @@ get '/stats/:token/:event' do
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
   
-  result = []
-  coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).each {|row| result.push row}
+  result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
@@ -43,11 +42,10 @@ end
 
 get '/stats/:token/:event/:property' do
   coll = db.collection MONGO_COLL
-  result = []
   event = Sanitize.clean(params[:event])
   property = Sanitize.clean(params[:property])
   token = Sanitize.clean(params[:token])
-  coll.find({"event" => "#{event}", "properties.#{property}" => {'$exists' => true}, "properties.token" => "#{token}"}).each {|row| result.push row}
+  result = coll.find({"event" => "#{event}", "properties.#{property}" => {'$exists' => true}, "properties.token" => "#{token}"}).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
@@ -65,25 +63,32 @@ end
 get '/track/' do
   puts "here"
   puts Base64.decode64 params[:data]
-  data = JSON.parse(Base64.decode64(params[:data].to_s))
-  result = {}
-  if not data['properties']['token'] == 'chtkmpdemo'
+  begin
+    data = JSON.parse(Base64.decode64(params[:data].to_s))
+    result = {}
+    if not data['properties']['token'] == 'chtkmpdemo'
+      result['status'] = 'failed'
+      result['reason'] = 'unauthorized'
+    elsif not data['event']
+      result['status'] = 'failed'
+      result['reason'] = 'no event provided'
+    elsif not data['properties']['ip']
+      result['status'] = 'failed'
+      result['reason'] = 'no ip provided'
+    else
+      coll = db.collection MONGO_COLL
+      #TODO use something more sophisticated to loop through and sanitize data (build ruby-fu)
+      clean_properties = {}
+      data['properties'].each {|property, value| clean_properties[Sanitize.clean(property)] = Sanitize.clean(value)}
+      trackedData = {'event' => Sanitize.clean(data['event']), 'properties' => clean_properties, 'mpclone_time_tracked' => Time.now.to_i}
+      coll.insert trackedData
+      result['status'] = 'success'
+    end
+  rescue
+    result = {}
     result['status'] = 'failed'
-    result['reason'] = 'unauthorized'
-  elsif not data['event']
-    result['status'] = 'failed'
-    result['reason'] = 'no event provided'
-  elsif not data['properties']['ip']
-    result['status'] = 'failed'
-    result['reason'] = 'no ip provided'
-  else
-    coll = db.collection MONGO_COLL
-    #TODO use something more sophisticated to loop through and sanitize data (build ruby-fu)
-    clean_properties = {}
-    data['properties'].each {|property, value| clean_properties[Sanitize.clean(property)] = Sanitize.clean(value)}
-    trackedData = {'event' => Sanitize.clean(data['event']), 'properties' => clean_properties, 'mpclone_time_tracked' => Time.now.to_i}
-    coll.insert trackedData
-    result['status'] = 'success'
+    result['reason'] = 'unallowed characters sent. Please stick to alphanumerics, hyphens and underscores.'
   end
-  result.inspect
+  content_type :json
+  result.to_json
 end

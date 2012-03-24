@@ -66,13 +66,16 @@
 	<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
 	<script src="javascripts/tabs.js"></script>
         <script src="javascripts/underscore-1.2.4.js"></script>
-        <script src="javascripts/backbone.js"></script>
         <script src="javascripts/json2.js"></script>
+	<script src="javascripts/tesseract.min.js"></script>
 	<script type="text/javascript">
 		var mpcloneApp = {};
-
+		
 		$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
-			console.log(response);
+			var byState = _.groupBy(response, function(row) {
+				return row.properties.state;
+			});
+			console.log(byState);
 		})
 	</script>
 
