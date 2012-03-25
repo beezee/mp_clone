@@ -5,6 +5,7 @@ require 'mongo'
 require 'base64'
 require 'json'
 require 'sanitize'
+require 'enumerator'
 
 if (ENV['MONGOHQ_URL'])
   uri = URI.parse(ENV['MONGOHQ_URL'])
@@ -99,6 +100,14 @@ get '/test/:event/:property/:page' do
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}, :limit => 1000
   content_type :json
   mr_results.find().to_a.to_json
+  result = coll.find({'event' => event, "properties.#{property}" => {'$exists' => true}}).to_a
+  groups = result.group_by {|o| o['properties'][property]}
+  res = []
+  groups.each do |k, v|
+    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
+    res << {'name' => k, 'data' => data}
+  end
+  res.to_json
 end
 
 get '/stats/:token/:event/:property/:page' do
