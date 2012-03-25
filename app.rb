@@ -107,7 +107,7 @@ get '/stats/:token/:event/:property' do
     if x['value']['result']
       data = x['value']['result'].collect do |i|
         num = i[0].to_i * 1000
-        [num.to_i, i[1].to_i]}
+        [num.to_i, i[1].to_i]
     end
       {'name' => x['_id'], 'data' => data}
     else
