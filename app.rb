@@ -108,6 +108,8 @@ get '/stats/:token/:event/:property' do
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
     end
   end
+  result.sort! {|a, b| a['data'].count <=> b['data'].count}
+  result = result[0..10]
   
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
