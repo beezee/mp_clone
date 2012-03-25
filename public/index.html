@@ -34,7 +34,7 @@
 	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
 	<style>
 		select {
-			min-width:120px;
+			min-width:80px;
 			display:inline-block;
 		}
 		label {
@@ -57,15 +57,14 @@
 			<h5>Version 1.1</h5>
 			<hr />
 		</div>
-		<div class="three columns">
-			&nbsp;
-		</div>
-		<div class="thirteen columns">
+		<div class="sixteen columns">
 			<fieldset>
 				<label for="event">Event</label>
 				<select id="event"></select>
 				<label for="property" style="margin-left:40px">Property</label>
 				<select id="property"></select>
+				<label style="margin-left:40px" for="page">Page</label>
+				<select id="page"></select>
 			</fieldset>
 		</div>
 		<div class="three columns">
@@ -124,20 +123,36 @@
 		
 		mpcloneApp.updateChart = function() {
 			var self = this;
-			$.get('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val(), function(response) {
+			var pageSelected = $('#page').val();
+			page = (pageSelected) ? pageSelected : '1';
+			$.get('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val()+'/'+page, function(response) {
 				if (response.status == 'failed') {
 					$('#chart').html('<h1>'+response.reason+'</h1>');
 					return;
 				}
+				mpcloneApp.drawPageSelect(response.pages);
 				var series = [];
 				var chartTitle = ($('#property').val() == 'all') ? 'All '+$('#event').val()+' events' : $('#event option:selected').text() + ' events by ' + $('#property option:selected').attr('value');
 				mpcloneApp.baseChartOptions.title = {text:chartTitle};
 				mpcloneApp.baseChartOptions.yAxis = {title: {text: '# of' + $('#event').val() + ' events logged'}};
-				mpcloneApp.baseChartOptions.series = response
+				mpcloneApp.baseChartOptions.series = (response.pages) ? response.result : response;
 				console.log(response);
 				this.chart = new Highcharts.Chart(mpcloneApp.baseChartOptions);
 			})	
 		};
+		
+		mpcloneApp.drawPageSelect = function(num) {
+			var pageSelect = $('#page');
+			pageSelect.unbind('change');
+			var i=1, html ='';
+			for(i=1; i<=num; i++) {
+				html += '<option value="'+i+'">'+i+'</option>';
+			}
+			pageSelect.html(html);
+			pageSelect.bind('change', function() {
+				mpcloneApp.updateChart();
+			});
+		}
 		
 		mpcloneApp.drawSelect = function(id, data) {
 			var html = '';

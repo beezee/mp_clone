@@ -87,11 +87,12 @@ get '/stats/:token/:event/all' do
   result.to_json
 end
 
-get '/stats/:token/:event/:property' do
+get '/stats/:token/:event/:property/:page' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   property = Sanitize.clean(params[:property])
   token = Sanitize.clean(params[:token])
+  page = Sanitize.clean(params[:page])
   
   map = "function() {emit(this.properties.#{property}, {time:this.mpclone_time_tracked, event:this.event})}"
   reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
@@ -107,9 +108,17 @@ get '/stats/:token/:event/:property' do
     else
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
     end
-  end
+  end 
   result.sort! {|a, b| a['data'].count <=> b['data'].count}
-  result = result[0..10]
+  page_end = page.to_i * 10
+  page_start = page_end - 10
+  if result.count < 10
+    pages = 1
+  else
+    pages = (result.count / 10).ceil
+  end
+  result = result[page_start..page_end]
+  result = {'pages' => pages, 'result' => result}
   
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
