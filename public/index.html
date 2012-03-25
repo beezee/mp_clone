@@ -124,7 +124,8 @@
 		
 		mpcloneApp.updateChart = function() {
 			var self = this;
-			$.getJSON('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val(), function(response) {
+			$.get('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val(), function(result) {
+				response = $.parseJSON(result);
 				if (response.status == 'failed') {
 					$('#chart').html('<h1>'+response.reason+'</h1>');
 					return;
