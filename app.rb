@@ -73,7 +73,7 @@ get '/stats/:token/:event/all' do
   all_results = mr_results.find().to_a
   result = all_results.collect do |x|
     if x['value']['result']
-      data = x['value']['result'].collect {|i| [(i[0]*1000).to_i, i[1].to_i]}
+      data = x['value']['result'].collect {|i| [(i[0] * 1000).to_i, i[1].to_i]}
       {'name' => x['_id'], 'data' => data}
     else
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
@@ -105,7 +105,7 @@ get '/stats/:token/:event/:property' do
   all_results = mr_results.find().to_a
   result = all_results.collect do |x|
     if x['value']['result']
-      data = x['value']['result'].collect {|i| [(i[0]*1000).to_i, i[1].to_i]}
+      data = x['value']['result'].collect {|i| [(i[0] * 1000).to_i, i[1].to_i]}
       {'name' => x['_id'], 'data' => data}
     else
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
