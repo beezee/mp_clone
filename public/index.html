@@ -32,7 +32,15 @@
 	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
 	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
-
+	<style>
+		select {
+			min-width:120px;
+			display:inline-block;
+		}
+		label {
+			display:inline-block;
+		}
+	</style>
 </head>
 <body>
 
@@ -49,13 +57,24 @@
 			<h5>Version 1.1</h5>
 			<hr />
 		</div>
-		<div class="two columns">
+		<div class="three columns">
+			&nbsp;
+		</div>
+		<div class="thirteen columns">
+			<fieldset>
+				<label for="event">Event</label>
+				<select id="event"></select>
+				<label for="property" style="margin-left:40px">Property</label>
+				<select id="property"></select>
+			</fieldset>
+		</div>
+		<div class="three columns">
 			&nbsp;
 		</div>
 		<div id="chart" class="ten columns">
 			
 		</div>
-		<div class="two columns">
+		<div class="three columns">
 			&nbsp;
 		</div>
 
@@ -72,6 +91,13 @@
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script type="text/javascript">
 		var mpcloneApp = {};
+		
+		mpcloneApp.apiToken = '';
+		
+		mpcloneApp.getToken = function() {
+			mpcloneApp.apiToken = prompt("Please enter your valid API token");
+			if (!mpcloneApp.apiToken || mpcloneApp.apiToken == '') mpcloneApp.getToken();
+		}
 		
 		mpcloneApp.baseChartOptions = {
 			            chart: {
@@ -98,25 +124,65 @@
 		
 		mpcloneApp.updateChart = function() {
 			var self = this;
-			$.getJSON('http://'+window.location.host+'/stats/chtkmpdemo/click', function(response) {
-				var byState = _.groupBy(response, function(row) {
-					return row.properties.state;
+			$.getJSON('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val(), function(response) {
+				if (response.status == 'failed') {
+					$('#chart').html('<h1>'+response.reason+'</h1>');
+					return;
+				}
+				var byProp = _.groupBy(response, function(row) {
+					return row.properties[$('#property').val()];
 				});
 				var series = [];
 				var points = 0;
-				_.each(byState, function(events, state) {
-					series.push({name: state, data:_.map(events, function(e, k) {
+				_.each(byProp, function(events, prop) {
+					var property = (prop != 'undefined') ? prop : 'All '+$('#event').val() + ' events';
+					console.log(property);
+					series.push({name: property, data:_.map(events, function(e, k) {
 						return [e.mpclone_time_tracked*1000, k+1]
 						})
 					});
 				});
-				console.log(series);
+				var chartTitle = ($('#property').val() == 'all') ? 'All '+$('#event').val()+' events' : $('#event option:selected').text() + ' events by ' + $('#property option:selected').attr('value');
+				mpcloneApp.baseChartOptions.title = {text:chartTitle};
+				mpcloneApp.baseChartOptions.yAxis = {title: {text: '# of' + $('#event').val() + ' events logged'}};
 				mpcloneApp.baseChartOptions.series = series;
+				console.log(series);
 				this.chart = new Highcharts.Chart(mpcloneApp.baseChartOptions);
 			})	
 		};
+		
+		mpcloneApp.drawSelect = function(id, data) {
+			var html = '';
+			_.each(data, function(option) {
+				html += '<option value="'+option.val+'">'+option.text+'</option>';
+			})
+			$('#'+id).html(html);
+		}
+		
+		mpcloneApp.updateControls = function(eventParam) {
+				var event = (eventParam) ? eventParam : $('#event').val();
+				$.getJSON('http://'+window.location.host+'/properties/' + mpcloneApp.apiToken + '/' + event, function(propsResponse) {
+					mpcloneApp.drawSelect('property', propsResponse);
+					$('#property').append('<option value="all">All</option>');
+					mpcloneApp.updateChart();
+				});
+		}
 		$('document').ready(function() {
-			mpcloneApp.updateChart();
+			mpcloneApp.getToken();
+			$.getJSON('http://'+window.location.host+'/events/'+mpcloneApp.apiToken, function(eventsResponse) {
+				if (eventsResponse.status == 'failed') {
+					$('#chart').html('<h1>'+eventsResponse.reason+'</h1>');
+					return;
+				}
+				mpcloneApp.updateControls(eventsResponse[0].val);
+				mpcloneApp.drawSelect('event', eventsResponse);
+			});
+			$('#event').change(function() {
+				mpcloneApp.updateControls();
+			});
+			$('#property').change(function() {
+				mpcloneApp.updateChart();
+			})
 		})
 	</script>
 

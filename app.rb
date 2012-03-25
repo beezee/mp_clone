@@ -17,16 +17,52 @@ if (ENV['MONGOHQ_URL'])
 end
 MONGO_COLL = 'chtkMpClonetest'
 
+module Enumerable
+  def dups
+    inject({}) {|h,v| h[v]=h[v].to_i+1; h}.reject{|k,v| v==1}.keys
+  end
+end 
+
 get '/' do 
   File.read(File.join('public', 'index.html'))
 end
 
-get '/stats/:token/:event' do
+get '/events/:token' do
+  coll = db.collection MONGO_COLL
+  token = Sanitize.clean params[:token]
+  result = coll.find({"properties.token" => "#{token}"}).to_a
+  if not params[:token] == 'chtkmpdemo'
+  #TODO: add formal authentication/registration/all that good stuff
+    result = {}
+    result['status'] = 'failed'
+    result['reason'] = 'That\'s an invalid api key.'
+  elsif not result.length > 0
+    result = {'status' => 'failed', 'reason' => 'Looks like we don\t have any data for you yet!', 'query' => "event: #{event}"}
+  else
+    all_events = result.collect {|x| x['event']}
+    result = all_events.uniq.collect {|x| {'val' => x, 'text' => x.to_s.capitalize}}
+  end
+  content_type :json
+  result.to_json
+end
+
+get '/properties/:token/:event' do
+  coll = db.collection MONGO_COLL
+  token = Sanitize.clean params[:token]
+  event = Sanitize.clean params[:event]
+  result = coll.find({"properties.token" => "#{token}", "event" => "#{event}"}).to_a
+  all_props = result.collect {|x| x['properties'].keys}
+  content_type :json
+  props = all_props.flatten().uniq.reject { |x| x == 'token'}
+  props_formatted = props.collect {|prop, val| {'val' => prop, 'text' => prop.to_s.capitalize}}
+  props_formatted.to_json
+end
+
+get '/stats/:token/:event/all' do
   #TODO: factor out so this can reuse code from property route
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
-  
   result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
