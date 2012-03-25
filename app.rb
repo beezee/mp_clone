@@ -45,11 +45,20 @@ get '/properties/:token/:event' do
   token = Sanitize.clean params[:token]
   event = Sanitize.clean params[:event]
   result = coll.find({"properties.token" => "#{token}", "event" => "#{event}"}).to_a
-  all_props = result.collect {|x| x['properties'].keys}
-  content_type :json
-  props = all_props.flatten().uniq.reject { |x| x == 'token'}
-  props_formatted = props.collect {|prop, val| {'val' => prop, 'text' => prop.to_s.capitalize}}
-  props_formatted.to_json
+  if not params[:token] == 'chtkmpdemo'
+  #TODO: add formal authentication/registration/all that good stuff
+    result = {}
+    result['status'] = 'failed'
+    result['reason'] = 'unauthorized'
+  elsif not result.length > 0
+    result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event: #{event}"}
+  else
+    all_props = result.collect {|x| x['properties'].keys}
+    content_type :json
+    props = all_props.flatten().uniq.reject { |x| x == 'token'}
+    result = props.collect {|prop, val| {'val' => prop, 'text' => prop.to_s.capitalize}}
+  end
+  result.to_json
 end
 
 get '/stats/:token/:event/all' do
