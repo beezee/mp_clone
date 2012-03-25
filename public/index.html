@@ -130,6 +130,7 @@
 					$('#chart').html('<h1>'+response.reason+'</h1>');
 					return;
 				}
+				var pages = (response.pages) ? response.pages : 1;
 				if (!pageChange) mpcloneApp.drawPageSelect(response.pages);
 				var series = [];
 				var chartTitle = ($('#property').val() == 'all') ? 'All '+$('#event').val()+' events' : $('#event option:selected').text() + ' events by ' + $('#property option:selected').attr('value');
