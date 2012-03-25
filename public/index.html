@@ -121,11 +121,9 @@
 				    series: []
 				};
 		
-		mpcloneApp.updateChart = function(pageChange) {
+		mpcloneApp.updateChart = function(pageChange, pageReset) {
 			var self = this;
-			var pageSelected = $('#page').val();
-			console.log(pageSelected);
-			page = (pageSelected) ? pageSelected : '1';
+			page = (pageReset) ? pageReset : $('#page').val();
 			$.get('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val()+'/'+page, function(response) {
 				if (response.status == 'failed') {
 					$('#chart').html('<h1>'+response.reason+'</h1>');
@@ -186,7 +184,7 @@
 				mpcloneApp.updateControls();
 			});
 			$('#property').change(function() {
-				mpcloneApp.updateChart();
+				mpcloneApp.updateChart(false 1);
 			})
 		})
 	</script>
