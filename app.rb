@@ -77,6 +77,7 @@ get '/stats/:token/:event/all' do
         num = i[0].to_i * 1000
         [num.to_i, i[1].to_i]
       end
+      {'name' => x['_id'], 'data' => data}
    else 
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
     end
