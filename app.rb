@@ -107,7 +107,7 @@ get '/stats/:token/:event/:property/:page' do
       {'name' => x['_id'], 'data' => data}
     else
       num = x['value']['time'].to_i * 1000
-      {'name' => x['_id'], 'data' => [num.to_i, 1]]}
+      {'name' => x['_id'], 'data' => [num.to_i, 1]}
     end
   end 
   result.sort! {|a, b| a['data'].count <=> b['data'].count}
