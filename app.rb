@@ -94,11 +94,11 @@ get '/test/:event/:property/:page' do
   token = Sanitize.clean(params[:token])
   page = Sanitize.clean(params[:page])
   
-  map = "function() {emit(this.properties.#{property}, {name:this.property, result:[[this.mpclone_time_tracked, 1]]})}"
-  reduce = "function(key, values){ var count = 0, res = []; values.forEach(function(value){count++; res.push([value.time, count]);}); return {name:key, result:res};}"
+  map = "function() {emit(this.properties.#{property}, {result:[[this.mpclone_time_tracked, 1]]});}"
+  reduce = "function(key, values){var results = []; values.forEach(function(value) { results = value.result.concat(results); }); return {result:results}; }"
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}
   content_type :json
-  [mr_results.find().to_a, mr_results.find().to_a[0]['value']['result'].count].to_json
+  mr_results.find().to_a.to_json
 end
 
 get '/stats/:token/:event/:property/:page' do
