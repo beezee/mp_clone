@@ -72,10 +72,12 @@ get '/stats/:token/:event/all' do
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}
   all_results = mr_results.find().to_a
   result = all_results.collect do |x|
-    if x['value']['result']
-      data = x['value']['result'].collect {|i| [(i[0] * 1000).to_i, i[1].to_i]}
-      {'name' => x['_id'], 'data' => data}
-    else
+   if x['value']['result']
+      data = x['value']['result'].collect do |i|
+        num = i[0].to_i * 1000
+        [num.to_i, i[1].to_i]
+      end
+   else 
       {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
     end
   end
