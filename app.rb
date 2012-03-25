@@ -17,12 +17,6 @@ if (ENV['MONGOHQ_URL'])
 end
 MONGO_COLL = 'mpclone_stats'
 
-module Enumerable
-  def dups
-    inject({}) {|h,v| h[v]=h[v].to_i+1; h}.reject{|k,v| v==1}.keys
-  end
-end 
-
 get '/' do 
   File.read(File.join('public', 'index.html'))
 end
