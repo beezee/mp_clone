@@ -79,23 +79,24 @@ get '/stats/:token/:event/all/1' do
   result.to_json
 end
 
-=begin
+
 get '/test/:event/:property/:page' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   property = Sanitize.clean(params[:property])
   token = Sanitize.clean(params[:token])
   page = Sanitize.clean(params[:page])
-  result = coll.find({'event' => event, "properties.#{property}" => {'$exists' => true}}).to_a
-  groups = result.group_by {|o| o['properties'][property]}
-  res = []
+  
+  rows = coll.find({'event' => event, "properties.#{property}" => {'$exists' => true}}).sort([['mpclone_time_tracked', 'ascending']]).to_a
+  groups = rows.group_by {|o| o['properties'][property]}
+  result = []
   groups.each do |k, v|
-    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
-    res << {'name' => k, 'data' => data}
+    data = v.enum_for(:each_with_index).collect {|v, index| [(v['mpclone_time_tracked'] * 1000).to_i, index + 1]}
+    result << {'name' => k, 'data' => data}
   end
-  res.to_json
+  result = result.sort_by {|a| a['data'].count}
 end
-=end
+
 
 get '/stats/:token/:event/:property/:page' do
   coll = db.collection MONGO_COLL
