@@ -52,7 +52,7 @@ get '/properties/:token/:event' do
   props_formatted.to_json
 end
 
-get '/stats/:token/:event/all' do
+get '/stats/:token/:event/all/1' do
   #TODO: factor out so this can reuse code from property route
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
