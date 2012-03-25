@@ -124,6 +124,7 @@
 		mpcloneApp.updateChart = function(pageChange) {
 			var self = this;
 			var pageSelected = $('#page').val();
+			console.log(pageSelected);
 			page = (pageSelected) ? pageSelected : '1';
 			$.get('http://'+window.location.host+'/stats/'+mpcloneApp.apiToken+'/'+$('#event').val()+'/'+$('#property').val()+'/'+page, function(response) {
 				if (response.status == 'failed') {
