@@ -87,6 +87,20 @@ get '/stats/:token/:event/all/1' do
   result.to_json
 end
 
+get '/test/:event/:property/:page' do
+  coll = db.collection MONGO_COLL
+  event = Sanitize.clean(params[:event])
+  property = Sanitize.clean(params[:property])
+  token = Sanitize.clean(params[:token])
+  page = Sanitize.clean(params[:page])
+  
+  map = "function() {emit(this.properties.#{property}, {name:this.property, result:[[this.mpclone_time_tracked, 1]]})}"
+  reduce = "function(key, values){ var count = 0, res = []; values.forEach(function(value){count++; res.push([value.time, count]);}); return {name:key, result:res};}"
+  mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event, "properties.#{property}" => {"$exists" => true}}
+  content_type :json
+  [mr_results.find().to_a, mr_results.find().to_a.count].to_json
+end
+
 get '/stats/:token/:event/:property/:page' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
@@ -94,7 +108,7 @@ get '/stats/:token/:event/:property/:page' do
   token = Sanitize.clean(params[:token])
   page = Sanitize.clean(params[:page])
   
-  map = "function() {emit(this.properties.#{property}, {time:this.mpclone_time_tracked, event:this.event})}"
+   map = "function() {emit(this.properties.#{property}, {time:this.mpclone_time_tracked, event:this.event})}"
   reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event, "properties.#{property}" => {"$exists" => true}}
   all_results = mr_results.find().to_a
