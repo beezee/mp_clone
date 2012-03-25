@@ -111,7 +111,7 @@ get '/stats/:token/:event/:property/:page' do
     data = v.enum_for(:each_with_index).collect {|v, index| [(v['mpclone_time_tracked'] * 1000).to_i, index + 1]}
     result << {'name' => k, 'data' => data}
   end
-  result.sort! {|a, b| a['data'].count <=> b['data'].count}
+  result = result.sort {|a, b| a['data'].count <=> b['data'].count}
   page_end = page.to_i * 10
   page_start = page_end - 10
   if result.count < 10
