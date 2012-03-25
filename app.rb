@@ -98,7 +98,7 @@ get '/test/:event/:property/:page' do
   reduce = "function(key, values){ var count = 0, res = []; values.forEach(function(value){count++; res.push([value.time, count]);}); return {name:key, result:res};}"
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event, "properties.#{property}" => {"$exists" => true}}
   content_type :json
-  [mr_results.find().to_a, mr_results.find().to_a.count].to_json
+  [mr_results.find().to_a, mr_results.find().to_a[0]['value']['result'].count].to_json
 end
 
 get '/stats/:token/:event/:property/:page' do
