@@ -75,7 +75,9 @@ get '/stats/:token/:event/all' do
    if x['value']['result']
       data = x['value']['result'].collect do |i|
         num = i[0].to_i * 1000
-        if num == 0 return
+        if num == 0
+          return
+        end
         [num.to_i, i[1].to_i]
       end
    else 
