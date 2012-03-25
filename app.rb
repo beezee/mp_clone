@@ -94,7 +94,8 @@ get '/test/:event/:property/:page' do
     data = v.enum_for(:each_with_index).collect {|v, index| [(v['mpclone_time_tracked'] * 1000).to_i, index + 1]}
     result << {'name' => k, 'data' => data}
   end
-  result = result.sort_by {|a| a['data'].count}
+  content_type :json
+  result = result.sort_by {|a| a['data'].count}.to_json
 end
 
 
