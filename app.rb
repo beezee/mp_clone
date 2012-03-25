@@ -58,24 +58,15 @@ get '/stats/:token/:event/all/1' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
+  page = Sanitize.clean(params[:page])
   
-  map = "function() {emit(this.name, {time:this.mpclone_time_tracked, event:this.event})}"
-  reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res, name:event.name}}"
-  mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}
-  all_results = mr_results.find().to_a
-  result = all_results.collect do |x|
-   if x['value']['result']
-      data = x['value']['result'].reject{|i| i[0].to_i * 1000 == 0}.collect do |i|
-        num = i[0].to_i * 1000
-        [num.to_i, i[1].to_i]
-      end
-      {'name' => x['_id'], 'data' => data}
-   else 
-      {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
-    end
+  rows = coll.find({'event' => event}).sort([['mpclone_time_tracked', 'ascending']]).to_a
+  groups = rows.group_by {|o| o['event']}
+  result = []
+  groups.each do |k, v|
+    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
+    result << {'name' => k, 'data' => data}
   end
-    
-  #result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
@@ -88,6 +79,7 @@ get '/stats/:token/:event/all/1' do
   result.to_json
 end
 
+=begin
 get '/test/:event/:property/:page' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
@@ -103,6 +95,7 @@ get '/test/:event/:property/:page' do
   end
   res.to_json
 end
+=end
 
 get '/stats/:token/:event/:property/:page' do
   coll = db.collection MONGO_COLL
@@ -111,22 +104,13 @@ get '/stats/:token/:event/:property/:page' do
   token = Sanitize.clean(params[:token])
   page = Sanitize.clean(params[:page])
   
-   map = "function() {emit(this.properties.#{property}, {time:this.mpclone_time_tracked, event:this.event})}"
-  reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
-  mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event, "properties.#{property}" => {"$exists" => true}}
-  all_results = mr_results.find().to_a
-  result = all_results.collect do |x|
-    if x['value']['result']
-      data = x['value']['result'].reject{|i| i[0].to_i * 1000 == 0}.collect do |i|
-        num = i[0].to_i * 1000
-        [num.to_i, i[1].to_i]
-    end
-      {'name' => x['_id'], 'data' => data}
-    else
-      num = x['value']['time'].to_i * 1000
-      {'name' => x['_id'], 'data' => [[num.to_i, 1]]}
-    end
-  end 
+  rows = coll.find({'event' => event, "properties.#{property}" => {'$exists' => true}}).sort([['mpclone_time_tracked', 'ascending']]).to_a
+  groups = rows.group_by {|o| o['properties'][property]}
+  result = []
+  groups.each do |k, v|
+    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
+    result << {'name' => k, 'data' => data}
+  end
   result.sort! {|a, b| a['data'].count <=> b['data'].count}
   page_end = page.to_i * 10
   page_start = page_end - 10

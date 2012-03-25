@@ -166,7 +166,7 @@
 				var event = (eventParam) ? eventParam : $('#event').val();
 				$.getJSON('http://'+window.location.host+'/properties/' + mpcloneApp.apiToken + '/' + event, function(propsResponse) {
 					mpcloneApp.drawSelect('property', propsResponse);
-					//$('#property').append('<option value="all">All</option>');
+					$('#property').append('<option value="all">All</option>');
 					mpcloneApp.updateChart(false, 1);
 				});
 		}
