@@ -64,7 +64,7 @@ get '/stats/:token/:event/all/1' do
   groups = rows.group_by {|o| o['event']}
   result = []
   groups.each do |k, v|
-    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
+    data = v.enum_for(:each_with_index).collect {|v, index| [(v['mpclone_time_tracked'] * 1000).to_i, index + 1]}
     result << {'name' => k, 'data' => data}
   end
   if not params[:token] == 'chtkmpdemo'
@@ -108,7 +108,7 @@ get '/stats/:token/:event/:property/:page' do
   groups = rows.group_by {|o| o['properties'][property]}
   result = []
   groups.each do |k, v|
-    data = v.enum_for(:each_with_index).collect {|v, index| [v['mpclone_time_tracked'], index + 1]}
+    data = v.enum_for(:each_with_index).collect {|v, index| [(v['mpclone_time_tracked'] * 1000).to_i, index + 1]}
     result << {'name' => k, 'data' => data}
   end
   result.sort! {|a, b| a['data'].count <=> b['data'].count}
