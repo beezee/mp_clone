@@ -73,11 +73,8 @@ get '/stats/:token/:event/all' do
   all_results = mr_results.find().to_a
   result = all_results.collect do |x|
    if x['value']['result']
-      data = x['value']['result'].collect do |i|
+      data = x['value']['result'].reject{|i| i[0] == 0}.collect do |i|
         num = i[0].to_i * 1000
-        if num == 0
-          return
-        end
         [num.to_i, i[1].to_i]
       end
    else 
