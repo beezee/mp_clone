@@ -129,24 +129,12 @@
 					$('#chart').html('<h1>'+response.reason+'</h1>');
 					return;
 				}
-				var byProp = _.groupBy(response, function(row) {
-					return row.properties[$('#property').val()];
-				});
 				var series = [];
-				var points = 0;
-				_.each(byProp, function(events, prop) {
-					var property = (prop != 'undefined') ? prop : 'All '+$('#event').val() + ' events';
-					console.log(property);
-					series.push({name: property, data:_.map(events, function(e, k) {
-						return [e.mpclone_time_tracked*1000, k+1]
-						})
-					});
-				});
 				var chartTitle = ($('#property').val() == 'all') ? 'All '+$('#event').val()+' events' : $('#event option:selected').text() + ' events by ' + $('#property option:selected').attr('value');
 				mpcloneApp.baseChartOptions.title = {text:chartTitle};
 				mpcloneApp.baseChartOptions.yAxis = {title: {text: '# of' + $('#event').val() + ' events logged'}};
-				mpcloneApp.baseChartOptions.series = series;
-				console.log(series);
+				mpcloneApp.baseChartOptions.series = response
+				console.log(response);
 				this.chart = new Highcharts.Chart(mpcloneApp.baseChartOptions);
 			})	
 		};
