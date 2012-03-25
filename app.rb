@@ -58,7 +58,7 @@ get '/stats/:token/:event/all/1' do
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
   
-  map = "function() {emit(this._id, {time:this.mpclone_time_tracked, event:this.event})}"
+  map = "function() {emit(this.event, {time:this.mpclone_time_tracked, event:this.event})}"
   reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
   mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}
   all_results = mr_results.find().to_a
