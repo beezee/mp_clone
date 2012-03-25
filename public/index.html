@@ -121,7 +121,7 @@
 				    series: []
 				};
 		
-		mpcloneApp.updateChart = function() {
+		mpcloneApp.updateChart = function(pageChange) {
 			var self = this;
 			var pageSelected = $('#page').val();
 			page = (pageSelected) ? pageSelected : '1';
@@ -130,7 +130,7 @@
 					$('#chart').html('<h1>'+response.reason+'</h1>');
 					return;
 				}
-				mpcloneApp.drawPageSelect(response.pages);
+				if (!pageChange) mpcloneApp.drawPageSelect(response.pages);
 				var series = [];
 				var chartTitle = ($('#property').val() == 'all') ? 'All '+$('#event').val()+' events' : $('#event option:selected').text() + ' events by ' + $('#property option:selected').attr('value');
 				mpcloneApp.baseChartOptions.title = {text:chartTitle};
@@ -150,7 +150,7 @@
 			}
 			pageSelect.html(html);
 			pageSelect.bind('change', function() {
-				mpcloneApp.updateChart();
+				mpcloneApp.updateChart(true);
 			});
 		}
 		
