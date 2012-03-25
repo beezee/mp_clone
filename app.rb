@@ -95,7 +95,7 @@ get '/test/:event/:property/:page' do
     result << {'name' => k, 'data' => data}
   end
   content_type :json
-  result = result.sort_by {|a| a['data'].count}.to_json
+  result = result.sort {|a, b| b['data'] <=> a['data'].count}.to_json
 end
 
 
