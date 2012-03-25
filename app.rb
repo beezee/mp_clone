@@ -45,20 +45,11 @@ get '/properties/:token/:event' do
   token = Sanitize.clean params[:token]
   event = Sanitize.clean params[:event]
   result = coll.find({"properties.token" => "#{token}", "event" => "#{event}"}).to_a
-  if not params[:token] == 'chtkmpdemo'
-  #TODO: add formal authentication/registration/all that good stuff
-    result = {}
-    result['status'] = 'failed'
-    result['reason'] = 'unauthorized'
-  elsif not result.length > 0
-    result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event: #{event}"}
-  else
-    all_props = result.collect {|x| x['properties'].keys}
-    content_type :json
-    props = all_props.flatten().uniq.reject { |x| x == 'token'}
-    result = props.collect {|prop, val| {'val' => prop, 'text' => prop.to_s.capitalize}}
-  end
-  result.to_json
+  all_props = result.collect {|x| x['properties'].keys}
+  content_type :json
+  props = all_props.flatten().uniq.reject { |x| x == 'token'}
+  props_formatted = props.collect {|prop, val| {'val' => prop, 'text' => prop.to_s.capitalize}}
+  props_formatted.to_json
 end
 
 get '/stats/:token/:event/all' do
@@ -66,7 +57,24 @@ get '/stats/:token/:event/all' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
-  result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
+  
+  map = "function() {emit(this.event, {time:this.mpclone_time_tracked, event:this.event})}"
+  reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
+  mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event}
+  all_results = mr_results.find().to_a
+  result = all_results.collect do |x|
+   if x['value']['result']
+      data = x['value']['result'].reject{|i| i[0].to_i * 1000 == 0}.collect do |i|
+        num = i[0].to_i * 1000
+        [num.to_i, i[1].to_i]
+      end
+      {'name' => x['_id'], 'data' => data}
+   else 
+      {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
+    end
+  end
+    
+  #result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
@@ -84,14 +92,30 @@ get '/stats/:token/:event/:property' do
   event = Sanitize.clean(params[:event])
   property = Sanitize.clean(params[:property])
   token = Sanitize.clean(params[:token])
-  result = coll.find({"event" => "#{event}", "properties.#{property}" => {'$exists' => true}, "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
+  
+  map = "function() {emit(this.properties.#{property}, {time:this.mpclone_time_tracked, event:this.event})}"
+  reduce = "function(key, values){ var count=0; res = []; values.forEach(function(value){ count++; res.push([value.time, count]); }); return {result:res}}"
+  mr_results = coll.map_reduce map, reduce, :out => 'mr_result', :query => {"event" => event, "properties.#{property}" => {"$exists" => true}}
+  all_results = mr_results.find().to_a
+  result = all_results.collect do |x|
+    if x['value']['result']
+      data = x['value']['result'].collect do |i|
+        num = i[0].to_i * 1000
+        [num.to_i, i[1].to_i]
+    end
+      {'name' => x['_id'], 'data' => data}
+    else
+      {'name' => x['_id'], 'data' => [[x['value']['time'].to_i, 1]]}
+    end
+  end
+  
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
     result['status'] = 'failed'
     result['reason'] = 'unauthorized'
   elsif not result.length > 0
-    result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event: #{event}, property: #{event}"}
+    result = {'status' => 'failed', 'reason' => 'No results matched your query', 'query' => "event: #{event}, property: #{property}"}
   end
   content_type :json
   result.to_json
