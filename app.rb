@@ -15,7 +15,7 @@ db = conn.db(uri.path.gsub(/^\//, ''))
 if (ENV['MONGOHQ_URL'])
   db.authenticate(uri.user, uri.password)
 end
-MONGO_COLL = 'chtkMpClonetest'
+MONGO_COLL = 'mpclone_stats'
 
 module Enumerable
   def dups
@@ -37,7 +37,7 @@ get '/events/:token' do
     result['status'] = 'failed'
     result['reason'] = 'That\'s an invalid api key.'
   elsif not result.length > 0
-    result = {'status' => 'failed', 'reason' => 'Looks like we don\t have any data for you yet!', 'query' => "event: #{event}"}
+    result = {'status' => 'failed', 'reason' => 'Looks like we don\'t have any data for you yet!'}
   else
     all_events = result.collect {|x| x['event']}
     result = all_events.uniq.collect {|x| {'val' => x, 'text' => x.to_s.capitalize}}
@@ -63,7 +63,7 @@ get '/stats/:token/:event/all' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
   token = Sanitize.clean(params[:token])
-  result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).to_a
+  result = coll.find({"event" => "#{event}", "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
@@ -81,7 +81,7 @@ get '/stats/:token/:event/:property' do
   event = Sanitize.clean(params[:event])
   property = Sanitize.clean(params[:property])
   token = Sanitize.clean(params[:token])
-  result = coll.find({"event" => "#{event}", "properties.#{property}" => {'$exists' => true}, "properties.token" => "#{token}"}).to_a
+  result = coll.find({"event" => "#{event}", "properties.#{property}" => {'$exists' => true}, "properties.token" => "#{token}"}).sort([['mpclone_time_tracked']]).to_a
   if not params[:token] == 'chtkmpdemo'
   #TODO: add formal authentication/registration/all that good stuff
     result = {}
