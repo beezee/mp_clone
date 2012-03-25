@@ -79,7 +79,7 @@ get '/stats/:token/:event/all/1' do
   result.to_json
 end
 
-
+=begin
 get '/test/:event/:property/:page' do
   coll = db.collection MONGO_COLL
   event = Sanitize.clean(params[:event])
@@ -97,6 +97,7 @@ get '/test/:event/:property/:page' do
   content_type :json
   result = result.sort {|a, b| b['data'].count <=> a['data'].count}.to_json
 end
+=end
 
 
 get '/stats/:token/:event/:property/:page' do
